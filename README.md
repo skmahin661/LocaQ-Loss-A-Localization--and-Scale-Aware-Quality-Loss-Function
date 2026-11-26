@@ -74,6 +74,18 @@ The adaptive multiplier is computed without gradient tracking and applied when a
 
 A one-epoch thyroid run completed with Ultralytics 8.4.51, Python 3.11.17, and PyTorch 2.11.0+cu128. See the experiment notebooks for the paper configurations.
 
+## Reported paper results
+
+| Dataset | YOLOv8m mAP50 | YOLOv8m mAP50–95 | YOLO11m mAP50 | YOLO11m mAP50–95 | YOLO11m mAP50–95 gain over BCE |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Thyroid Histopathology | 0.6390 | 0.4558 | 0.6417 | 0.4917 | +2.23 pp |
+| Dental OPG | 0.5963 | 0.3367 | 0.6384 | 0.3570 | +5.71 pp |
+| Brain Tumor | 0.7542 | 0.5460 | 0.7565 | 0.5147 | +0.55 pp |
+
+The table shows the reported LocaQ Loss scores. **pp** means percentage points. With YOLOv8m, LocaQ achieved the highest mAP50 and mAP50–95 among the five evaluated losses on all three datasets. The largest mAP50–95 gain over the strongest YOLOv8m baseline was 3.79 pp on Thyroid Histopathology.
+
+With YOLO11m, LocaQ improved mAP50–95 over default BCE on all three datasets, with the largest gain on Dental OPG. On Brain Tumor, mAP50–95 improved while mAP50 decreased from 0.7787 to 0.7565. The reported comparisons used a single training seed.
+
 ## License
 
 [GNU Affero General Public License v3.0](LICENSE)
