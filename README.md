@@ -6,7 +6,7 @@ LocaQ Loss is a classification objective for medical abnormality detection. It e
 
 1. Clone or download this repository and launch Jupyter from its root so Python can import [locaq_loss.py](locaq_loss.py).
 2. Select a kernel with PyTorch and Ultralytics. The original thyroid notebook records Python 3.10.20, PyTorch 2.5.1+cu121, and Ultralytics 8.4.51. The one-epoch thyroid smoke test completed with Python 3.11.17, PyTorch 2.11.0+cu128, and Ultralytics 8.4.51. Choose a PyTorch build for your hardware.
-3. Open [the usage notebook](use_locaq_loss_with_yolo.ipynb), set `DATA_YAML`, choose YOLOv8m or YOLO11m with `MODEL_CFG`, and run the one-epoch example. It selects GPU 0 when CUDA is available and CPU otherwise.
+3. Open [the usage notebook](use_locaq_loss_with_yolo.ipynb), set `DATA_YAML`, set `MODEL_CFG` to your compatible Ultralytics YOLO detector configuration, and run the one-epoch example. It selects GPU 0 when CUDA is available and CPU otherwise.
 4. Run the optional test-set evaluation if your dataset YAML has a `test` split.
 
 A detection YAML can look like this. Point `path` to your dataset root and replace the example class names with the names in your labels.
@@ -28,6 +28,8 @@ from locaq_loss import LocaQLoss
 ```
 
 `LocaQLoss` is the implementation class.
+
+LocaQ Loss can be used with any Ultralytics YOLO detection model that supports the required training-loss interface. Set `MODEL_CFG` to your model configuration. YOLOv8m and YOLO11m were evaluated in the paper.
 
 ## Default loss parameters
 
