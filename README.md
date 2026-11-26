@@ -1,10 +1,10 @@
 # LocaQ Loss
 
-LocaQ Loss is a classification objective for medical abnormality detection. It extends Varifocal Loss (VFL) with adaptive foreground weighting based on classification confidence, localization quality, and target-box area. The YOLO integration replaces the classification-loss term during training and retains the detector architecture, box regression loss, and Distribution Focal Loss.
+LocaQ Loss is a classification objective for object detection. It extends Varifocal Loss with adaptive foreground weights based on classification confidence, localization quality, and target-box area. The integration preserves the detector architecture, box regression loss, and Distribution Focal Loss.
 
-## Installation
+## Install
 
-Clone the repository and start Jupyter from its root. In a clean environment, install the PyTorch build for your CPU or GPU before installing the remaining packages.
+Install the PyTorch build appropriate for your hardware, then run:
 
 ```bash
 git clone https://github.com/skmahin661/LocaQ-Loss-A-Localization--and-Scale-Aware-Quality-Loss-Function.git
@@ -13,38 +13,44 @@ python -m pip install "ultralytics==8.4.51" jupyterlab
 python -m jupyterlab
 ```
 
-## Use LocaQ on your dataset
+## Prepare your dataset
 
-1. Clone or download this repository and launch Jupyter from its root so Python can import [locaq_loss.py](locaq_loss.py).
-2. Select a kernel with PyTorch and Ultralytics. The original thyroid notebook records Python 3.10.20, PyTorch 2.5.1+cu121, and Ultralytics 8.4.51. The one-epoch thyroid smoke test completed with Python 3.11.17, PyTorch 2.11.0+cu128, and Ultralytics 8.4.51. Choose a PyTorch build for your hardware.
-3. Open [the usage notebook](use_locaq_loss_with_yolo.ipynb), set `DATA_YAML`, set `MODEL_CFG` to your compatible Ultralytics YOLO detector configuration, and run the one-epoch example. It selects GPU 0 when CUDA is available and CPU otherwise.
-4. Run the optional test-set evaluation if your dataset YAML has a `test` split.
-
-A detection YAML can look like this. Point `path` to your dataset root and replace the example class names with the names in your labels.
+Use any object detection dataset with bounding-box labels in Ultralytics YOLO format. Each image needs a matching label file for its annotations. Each label row contains `class_id x_center y_center width height`, with zero-based class IDs and coordinates normalized to the image dimensions. Put the labels in the `labels/` directory corresponding to each `images/` split.
 
 ```yaml
-path: /absolute/path/to/dataset
+path: /absolute/path/to/your/dataset
 train: images/train
 val: images/val
 test: images/test  # Optional
 names:
-  0: finding_a
-  1: finding_b
+  0: class_a
+  1: class_b
 ```
 
-### Expected output and checkpoints
+## Choose your model and train
 
-The usage notebook prints `LocaQ Loss configured for the training model.` when the callback is registered on the training model. The successful thyroid experiment logged `[LocaQLoss] Injected into trainer.model successfully.` and completed one epoch. After training, `model.trainer.best` points to `best.pt`, normally under `runs/locaq/<model>_example/weights/`. Use the path returned by the trainer if the run name is incremented.
+Open the [usage notebook](use_locaq_loss_with_yolo.ipynb) from the repository root. Set `DATA_YAML` to your dataset YAML and `MODEL_CFG` to the configuration of your detector. LocaQ can be used with any Ultralytics YOLO detection model that supports the training-loss interface used by `LocaQLoss`. The paper evaluated YOLOv8m and YOLO11m. Compatibility with other model versions depends on their training interface.
 
-The training callback imports the loss as follows:
+Run the notebook with `EPOCHS = 1` for a quick integration check. It selects GPU 0 when CUDA is available and CPU otherwise. The callback prints `LocaQ Loss configured for the training model.` when it installs the custom criterion. `model.trainer.best` gives the path to `best.pt` after training. Run the optional evaluation cell if your YAML defines a test split.
+
+## Integrate LocaQ into your own training script
 
 ```python
+import types
+from ultralytics import YOLO
 from locaq_loss import LocaQLoss
+
+def install_locaq(trainer):
+    trainer.model.init_criterion = types.MethodType(
+        lambda model: LocaQLoss(model), trainer.model
+    )
+
+model = YOLO(MODEL_CFG)
+model.add_callback("on_train_start", install_locaq)
+model.train(data=DATA_YAML, epochs=1)
 ```
 
-`LocaQLoss` is the implementation class.
-
-LocaQ Loss can be used with any Ultralytics YOLO detection model that supports the required training-loss interface. Set `MODEL_CFG` to your model configuration. YOLOv8m and YOLO11m were evaluated in the paper.
+Define `MODEL_CFG` and `DATA_YAML` as paths to your model configuration and dataset YAML before running the example.
 
 ## Default loss parameters
 
@@ -58,32 +64,16 @@ LocaQ Loss can be used with any Ultralytics YOLO detection model that supports t
 
 The adaptive multiplier is computed without gradient tracking and applied when a batch contains more than 10 foreground assignments. Gradients still flow through the classification objective. For direct use of the helper outside the training callback, supply `xyxy` boxes in a common coordinate system for the overlap calculation and use consistent area units for the target boxes and reference area.
 
-## Reproduce the YOLOv8m experiments
 
-| Dataset | Notebook | Reported mAP50 | Reported mAP50–95 |
-| --- | --- | ---: | ---: |
-| Thyroid Histopathology | [Training and evaluation](thyroid_histopathology_yolov8m_locaq_loss.ipynb) | 0.6390 | 0.4558 |
-| Dental OPG | [Training and evaluation](dental_opg_yolov8m_locaq_loss.ipynb) | 0.5963 | 0.3367 |
-| Brain Tumor | [Training and evaluation](brain_tumor_yolov8m_locaq_loss.ipynb) | 0.7542 | 0.5460 |
 
-### Dataset sources and preparation
+## Paper experiment notebooks
 
-| Dataset | Source cited in the manuscript |
-| --- | --- |
-| Thyroid Histopathology | [Thyroid Cancer 0606 dataset, version 1](https://universe.roboflow.com/thyroid-cancer-75ast/thyroid-cancer-0606/dataset/1) |
-| Dental OPG | [OPG Dataset for Kennedy Classification of Partially Edentulous Arches](https://doi.org/10.17632/ccw5mvg69r.1) |
-| Brain Tumor | [Ultralytics Brain Tumor dataset](https://docs.ultralytics.com/datasets/detect/brain-tumor/) |
+- [Thyroid Histopathology](thyroid_histopathology_yolov8m_locaq_loss.ipynb)
+- [Dental OPG](dental_opg_yolov8m_locaq_loss.ipynb)
+- [Brain Tumor](brain_tumor_yolov8m_locaq_loss.ipynb)
 
-Prepare the images and bounding-box labels in YOLO detection format. Keep each split's labels under the corresponding `labels/` directory, using the same file stem as each image. Set `DATA_YAML` and `OUTPUT_ROOT` in the experiment notebook's configuration cell. For evaluation only, set `CHECKPOINT_OVERRIDE` to the path of an existing `best.pt`, run the configuration cell, and skip training.
-
-The source links identify the original datasets. Exact reproduction requires the curated annotations and the original image assignments for each split. The paper reports training/validation/test counts of 327/45/99 for Thyroid Histopathology, 332/44/106 for Dental OPG, and 770/110/221 for Brain Tumor. The notebooks do not include the datasets. Matching split counts alone does not reproduce the original split membership.
-
-The logged one-epoch thyroid run verifies the integration on that setup. The table reports the paper experiments, which are separate from that smoke test.
+A one-epoch thyroid run completed with Ultralytics 8.4.51, Python 3.11.17, and PyTorch 2.11.0+cu128. See the experiment notebooks for the paper configurations.
 
 ## License
 
-The code is distributed under the [GNU Affero General Public License v3.0](LICENSE).
-
-## Manuscript
-
-*LocaQ Loss: A Localization- and Scale-Aware Quality Loss for Medical Abnormality Detection*.
+[GNU Affero General Public License v3.0](LICENSE)
