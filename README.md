@@ -2,6 +2,17 @@
 
 LocaQ Loss is a classification objective for medical abnormality detection. It extends Varifocal Loss (VFL) with adaptive foreground weighting based on classification confidence, localization quality, and target-box area. The YOLO integration replaces the classification-loss term during training and retains the detector architecture, box regression loss, and Distribution Focal Loss.
 
+## Installation
+
+Clone the repository and start Jupyter from its root. In a clean environment, install the PyTorch build for your CPU or GPU before installing the remaining packages.
+
+```bash
+git clone https://github.com/skmahin661/LocaQ-Loss-A-Localization--and-Scale-Aware-Quality-Loss-Function.git
+cd LocaQ-Loss-A-Localization--and-Scale-Aware-Quality-Loss-Function
+python -m pip install "ultralytics==8.4.51" jupyterlab
+python -m jupyterlab
+```
+
 ## Use LocaQ on your dataset
 
 1. Clone or download this repository and launch Jupyter from its root so Python can import [locaq_loss.py](locaq_loss.py).
@@ -21,7 +32,11 @@ names:
   1: finding_b
 ```
 
-The training callback constructs the loss class as follows:
+### Expected output and checkpoints
+
+The usage notebook prints `LocaQ Loss configured for the training model.` when the callback is registered on the training model. The successful thyroid experiment logged `[LocaQLoss] Injected into trainer.model successfully.` and completed one epoch. After training, `model.trainer.best` points to `best.pt`, normally under `runs/locaq/<model>_example/weights/`. Use the path returned by the trainer if the run name is incremented.
+
+The training callback imports the loss as follows:
 
 ```python
 from locaq_loss import LocaQLoss
@@ -51,7 +66,17 @@ The adaptive multiplier is computed without gradient tracking and applied when a
 | Dental OPG | [Training and evaluation](dental_opg_yolov8m_locaq_loss.ipynb) | 0.5963 | 0.3367 |
 | Brain Tumor | [Training and evaluation](brain_tumor_yolov8m_locaq_loss.ipynb) | 0.7542 | 0.5460 |
 
-Supply the corresponding dataset and annotation splits, then configure the dataset YAML, output directory, and optional checkpoint before running an experiment notebook. The paper reports training/validation/test counts of 327/45/99 for Thyroid Histopathology, 332/44/106 for Dental OPG, and 770/110/221 for Brain Tumor. The notebooks do not include the datasets. Matching split counts alone does not reproduce the original split membership.
+### Dataset sources and preparation
+
+| Dataset | Source cited in the manuscript |
+| --- | --- |
+| Thyroid Histopathology | [Thyroid Cancer 0606 dataset, version 1](https://universe.roboflow.com/thyroid-cancer-75ast/thyroid-cancer-0606/dataset/1) |
+| Dental OPG | [OPG Dataset for Kennedy Classification of Partially Edentulous Arches](https://doi.org/10.17632/ccw5mvg69r.1) |
+| Brain Tumor | [Ultralytics Brain Tumor dataset](https://docs.ultralytics.com/datasets/detect/brain-tumor/) |
+
+Prepare the images and bounding-box labels in YOLO detection format. Keep each split's labels under the corresponding `labels/` directory, using the same file stem as each image. Set `DATA_YAML` and `OUTPUT_ROOT` in the experiment notebook's configuration cell. For evaluation only, set `CHECKPOINT_OVERRIDE` to the path of an existing `best.pt`, run the configuration cell, and skip training.
+
+The source links identify the original datasets. Exact reproduction requires the curated annotations and the original image assignments for each split. The paper reports training/validation/test counts of 327/45/99 for Thyroid Histopathology, 332/44/106 for Dental OPG, and 770/110/221 for Brain Tumor. The notebooks do not include the datasets. Matching split counts alone does not reproduce the original split membership.
 
 The logged one-epoch thyroid run verifies the integration on that setup. The table reports the paper experiments, which are separate from that smoke test.
 
