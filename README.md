@@ -86,6 +86,12 @@ The table shows the reported LocaQ Loss scores. **pp** means percentage points. 
 
 With YOLO11m, LocaQ improved mAP50–95 over default BCE on all three datasets, with the largest gain on Dental OPG. On Brain Tumor, mAP50–95 improved while mAP50 decreased from 0.7787 to 0.7565. The reported comparisons used a single training seed.
 
+## Citation
+
+If you use LocaQ Loss in your research, please cite the software repository:
+
+> Munshaibur Rahman Mahin, Most. Sonia Islam, Nur Nabi Rahman, Mohammad Sakib Mahmood, M. F. Mridha, and Md. Jakir Hossen. *LocaQ Loss: A Localization- and Scale-Aware Quality Loss for Medical Abnormality Detection* [Software]. GitHub. https://github.com/skmahin661/LocaQ-Loss-A-Localization--and-Scale-Aware-Quality-Loss-Function
+
 ## License
 
 [GNU Affero General Public License v3.0](LICENSE)
