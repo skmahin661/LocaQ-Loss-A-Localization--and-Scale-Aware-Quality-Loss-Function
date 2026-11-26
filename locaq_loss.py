@@ -1,6 +1,6 @@
 # ============================================================
 # locaq_loss.py
-# VFL + IoU-Conditioned False-Negative Aware Loss (QALoss)
+# VFL + IoU-Conditioned False-Negative Aware Loss (LocaQLoss)
 # Compatible with ultralytics 8.4.x AND 8.3.x
 # ============================================================
 # Novel contribution:
@@ -10,12 +10,12 @@
 #   weight = (1 - pt)^gamma  [cls confidence only]
 #
 # Usage:
-#   from locaq_loss import QALoss
+#   from locaq_loss import LocaQLoss
 #   import types
 #   model = YOLO("yolov8m.yaml")
 #   def inject(trainer):
 #       trainer.model.init_criterion = types.MethodType(
-#           lambda self: QALoss(self, beta=1.0), trainer.model
+#           lambda self: LocaQLoss(self, beta=1.0), trainer.model
 #       )
 #   model.add_callback("on_train_start", inject)
 #   model.train(...)
@@ -38,7 +38,7 @@ def _apply_locaq_loss(
     dtype,
 ):
     """
-    Core QALoss computation — shared between 8.3.x and 8.4.x.
+    Core LocaQLoss computation — shared between 8.3.x and 8.4.x.
 
     Novel formula:
         fn_weight = 1 + beta * (1 - cls_conf) * (1 - iou_quality)
@@ -160,7 +160,7 @@ def _apply_locaq_loss(
     return _final_loss.sum() / target_scores_sum
 
 
-class QALoss(v8DetectionLoss):
+class LocaQLoss(v8DetectionLoss):
     """
     Quality-Aware Loss — VFL + IoU-Conditioned FN-Aware Weighting.
 
@@ -177,11 +177,11 @@ class QALoss(v8DetectionLoss):
     Example (ultralytics 8.4.x):
         >>> import types
         >>> from ultralytics import YOLO
-        >>> from locaq_loss import QALoss
+        >>> from locaq_loss import LocaQLoss
         >>> model = YOLO("yolov8m.yaml")
         >>> def inject(trainer):
         ...     trainer.model.init_criterion = types.MethodType(
-        ...         lambda self: QALoss(self, beta=1.0), trainer.model
+        ...         lambda self: LocaQLoss(self, beta=1.0), trainer.model
         ...     )
         >>> model.add_callback("on_train_start", inject)
         >>> model.train(data="data.yaml", epochs=250)

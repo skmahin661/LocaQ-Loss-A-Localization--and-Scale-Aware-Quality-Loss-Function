@@ -24,10 +24,10 @@ names:
 The training callback constructs the loss class as follows:
 
 ```python
-from locaq_loss import QALoss as LocaQLoss
+from locaq_loss import LocaQLoss
 ```
 
-`QALoss` is the implementation class. `LocaQLoss` is a readable alias for the same class.
+`LocaQLoss` is the implementation class.
 
 ## Default loss parameters
 
